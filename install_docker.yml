@@ -10,19 +10,24 @@
       apt: name={{ item }} state=latest update_cache=yes
       loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common' ]
 
+    - name: Get which distro we are installing on (ubuntu or debian)
+      shell: lsb_release -is | tr '[:upper:]' '[:lower:]'
+      register: distro
+      ignore_errors: False
+
     - name: Add Docker GPG apt Key
       apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
+        url: https://download.docker.com/linux/{{distro.stdout}}/gpg
         state: present
 
-    - name: Get the current version of ubuntu
+    - name: Get the current release of the OS
       shell: /usr/bin/lsb_release -cs
       register: release
       ignore_errors: True
 
     - name: Add Docker Repository
       apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu {{release.stdout}} stable
+        repo: deb https://download.docker.com/linux/{{distro.stdout}} {{release.stdout}} stable
         state: present
 
     - name: Update apt and install docker
